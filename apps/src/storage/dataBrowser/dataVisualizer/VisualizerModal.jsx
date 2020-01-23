@@ -85,17 +85,13 @@ class VisualizerModal extends React.Component {
   };
 
   parseRecords = memoize(rawRecords => {
-    if (Object.keys(rawRecords).length === 0) {
-      return [];
-    } else {
-      let parsedRecords = [];
-      rawRecords.forEach(record => {
-        if (record) {
-          parsedRecords.push(JSON.parse(record));
-        }
-      });
-      return parsedRecords;
-    }
+    let parsedRecords = [];
+    rawRecords.forEach(record => {
+      if (record) {
+        parsedRecords.push(JSON.parse(record));
+      }
+    });
+    return parsedRecords;
   });
 
   findNumericColumns = memoize((records, columns) => {
@@ -103,6 +99,14 @@ class VisualizerModal extends React.Component {
     const isColumnNumeric = (records, column) =>
       records.every(record => isNumericOrBlank(record[column]));
     return columns.filter(column => isColumnNumeric(records, column));
+  });
+
+  getValuesForFilterColumn = memoize((records, column) => {
+    let values = [];
+    values = Array.from(new Set(records.map(record => record[column])));
+    values = values.map(x => (typeof x === 'string' ? `"${x}"` : `${x}`));
+
+    return values;
   });
 
   getDisplayNameForChartType(chartType) {
@@ -121,7 +125,13 @@ class VisualizerModal extends React.Component {
   }
 
   render() {
-    const parsedRecords = this.parseRecords(this.props.tableRecords);
+    // this.props.tableRecords is either an object or an array (see propTypes comment). If it's an object, we want to
+    // convert it to an array before trying to parse the records.
+    const parsedRecords = this.parseRecords(
+      Array.isArray(this.props.tableRecords)
+        ? this.props.tableRecords
+        : Object.values(this.props.tableRecords)
+    );
     const numericColumns = this.findNumericColumns(
       parsedRecords,
       this.props.tableColumns
@@ -256,7 +266,7 @@ class VisualizerModal extends React.Component {
           <div style={{paddingTop: 20}}>
             <DropdownField
               displayName={msg.filter()}
-              options={[1, 2, 3]}
+              options={this.props.tableColumns}
               disabledOptions={[]}
               value={this.state.filterColumn}
               onChange={event =>
@@ -269,7 +279,10 @@ class VisualizerModal extends React.Component {
             />
             <DropdownField
               displayName={msg.by()}
-              options={[]}
+              options={this.getValuesForFilterColumn(
+                parsedRecords,
+                this.state.filterColumn
+              )}
               disabledOptions={[]}
               value={this.state.filterValue}
               onChange={event =>
