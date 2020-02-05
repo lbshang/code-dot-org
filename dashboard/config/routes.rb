@@ -139,6 +139,7 @@ Dashboard::Application.routes.draw do
   get '/share/:id', to: redirect('/c/%{id}')
 
   devise_scope :user do
+    post '/oauth_sign_in/:provider', to: 'sessions#oauth_sign_in', as: :oauth_sign_in
     get '/oauth_sign_out/:provider', to: 'sessions#oauth_sign_out', as: :oauth_sign_out
     post '/users/begin_sign_up', to: 'registrations#begin_sign_up'
     patch '/dashboardapi/users', to: 'registrations#update'

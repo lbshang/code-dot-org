@@ -53,6 +53,11 @@ class SessionsController < Devise::SessionsController
     render layout: false
   end
 
+  # POST /oauth_sign_in/:provider
+  def oauth_sign_in
+    p params
+  end
+
   private
 
   # Override default Devise sign_out path method
